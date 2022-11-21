@@ -10,6 +10,7 @@
 
 #include"stdint.h"
 #include"main.h"
+#include"linkedList.h"
 
 typedef struct {
 	void (*pTask)(void);
@@ -22,16 +23,20 @@ typedef struct {
 #define SCH_MAX_TASKS 	40
 #define NO_TASK_ID 		0
 
-#define RETURN_ERROR					1
-#define RETURN_NORMAL 					2
-#define ERROR_SCH_CANNOT_DELETE_TASK	3
-#define ERROR_SCH_TOO_MANY_TASKS		4
+#define RETURN_ERROR					0
+#define RETURN_NORMAL 					1
+#define ERROR_SCH_CANNOT_DELETE_TASK	2
+#define ERROR_SCH_TOO_MANY_TASKS		3
 
 unsigned char Error_code_G;
-sTask SCH_Tasks_G[SCH_MAX_TASKS];
+//use to save index of task
+int indexTask[SCH_MAX_TASKS];
+//queue contain information of tasks
+extern struct llist list;
 
 void SCH_Init(void);
 void SCH_Update(void);
+//Unit of delay and period is "ms"
 unsigned char SCH_Add_Task(void (*pFuntion)(), uint32_t Delay, uint32_t Period);
 void SCH_Dispatch_Tasks(void);
 unsigned char SCH_Delete_Task(uint32_t TaskID);

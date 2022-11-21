@@ -1,0 +1,3 @@
+linkedList.c:11:6:add	40	static
+linkedList.c:63:6:delete	24	static
+linkedList.c:108:6:deleteHead	16	static

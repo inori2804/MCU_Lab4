@@ -78,6 +78,7 @@ void SCH_Dispatch_Tasks(void) {
 	while (tmp && tmp->data.Delay == 0) {
 		//head Task ready to run
 		(*tmp->data.pTask)();
+		//for uart purpose
 		flag_uart = 1;
 		data = timestamp;
 		data_id = tmp->data.TaskID;

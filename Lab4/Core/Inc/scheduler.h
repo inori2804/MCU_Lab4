@@ -34,6 +34,11 @@ int indexTask[SCH_MAX_TASKS];
 //queue contain information of tasks
 extern struct llist list;
 
+extern int timestamp;
+extern int flag_uart;
+extern int data;
+extern int data_id;
+
 void SCH_Init(void);
 void SCH_Update(void);
 //Unit of delay and period is "ms"

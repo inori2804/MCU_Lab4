@@ -22,6 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include"stdio.h"
+#include"math.h"
 #include"scheduler.h"
 #include"timer.h"
 #include"linkedList.h"
@@ -44,6 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 
+UART_HandleTypeDef huart2;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -52,6 +56,7 @@ TIM_HandleTypeDef htim2;
 void SystemClock_Config(void);
 static void MX_TIM2_Init(void);
 static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -105,6 +110,7 @@ int main(void) {
 	/* Initialize all configured peripherals */
 	MX_TIM2_Init();
 	MX_GPIO_Init();
+	MX_USART2_UART_Init();
 	/* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim2);
 	/* USER CODE END 2 */
@@ -113,7 +119,8 @@ int main(void) {
 	/* USER CODE BEGIN WHILE */
 	SCH_Init();
 	//Create timer to test SCH_Delete Function
-	setTimer0(3000);
+	setTimer0(10000);
+	uint8_t send_data[40];
 	//Create 5 task
 	SCH_Add_Task(ledTest_0, 500, 500);
 	uint8_t index1 = SCH_Add_Task(ledTest_1, 500, 1000);
@@ -121,19 +128,20 @@ int main(void) {
 	SCH_Add_Task(ledTest_3, 500, 2000);
 	SCH_Add_Task(ledTest_4, 500, 2500);
 	//Create one shot task
-//	SCH_Add_Task(ledTest_5, 5000, 0);
-//	SCH_Delete_Task(index1);
+	SCH_Add_Task(ledTest_5, 5000, 0);
 	while (1) {
 		SCH_Dispatch_Tasks();
-		HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, SET);
 		if (timer0_flag == 1) {
 			timer0_flag = 0;
-			//Delete task and add again into List with different Period
+			//Delete task
 			SCH_Delete_Task(index1);
-			HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, SET);
-//		  SCH_Add_Task(ledTest_1, 500, 2000);
 		}
-
+		if (flag_uart == 1) {
+			sprintf((char*) send_data, "Timestamp is %d with TaskID is: %d\r\n",
+					data, data_id);
+			HAL_UART_Transmit(&huart2, (uint8_t*) send_data, 40, 500);
+			flag_uart = 0;
+		}
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -216,6 +224,37 @@ static void MX_TIM2_Init(void) {
 }
 
 /**
+ * @brief USART2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_USART2_UART_Init(void) {
+
+	/* USER CODE BEGIN USART2_Init 0 */
+
+	/* USER CODE END USART2_Init 0 */
+
+	/* USER CODE BEGIN USART2_Init 1 */
+
+	/* USER CODE END USART2_Init 1 */
+	huart2.Instance = USART2;
+	huart2.Init.BaudRate = 9600;
+	huart2.Init.WordLength = UART_WORDLENGTH_8B;
+	huart2.Init.StopBits = UART_STOPBITS_1;
+	huart2.Init.Parity = UART_PARITY_NONE;
+	huart2.Init.Mode = UART_MODE_TX_RX;
+	huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(&huart2) != HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN USART2_Init 2 */
+
+	/* USER CODE END USART2_Init 2 */
+
+}
+
+/**
  * @brief GPIO Initialization Function
  * @param None
  * @retval None
@@ -224,12 +263,13 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
 
 	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOB,
-			LED_0_Pin | LED_1_Pin | LED_2_Pin | LED_3_Pin | LED_4_Pin
-					| LED_5_Pin, GPIO_PIN_RESET);
+	LED_0_Pin | LED_1_Pin | LED_2_Pin | LED_3_Pin | LED_4_Pin | LED_5_Pin,
+			GPIO_PIN_RESET);
 
 	/*Configure GPIO pins : LED_0_Pin LED_1_Pin LED_2_Pin LED_3_Pin
 	 LED_4_Pin LED_5_Pin */
@@ -246,6 +286,7 @@ static void MX_GPIO_Init(void) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	SCH_Update();
 	timerRun();
+	timestamp += 10;
 }
 /* USER CODE END 4 */
 

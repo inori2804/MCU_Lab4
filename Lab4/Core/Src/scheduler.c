@@ -10,6 +10,10 @@
 int SCH_CYCLE = 10;
 struct llist list;
 int indexTask[SCH_MAX_TASKS];
+int timestamp = 0;
+int flag_uart = 0;
+int data = 0;
+int data_id = 0;
 
 void SCH_Init(void) {
 	//initial list
@@ -21,6 +25,7 @@ void SCH_Init(void) {
 		indexTask[i] = -1;
 	}
 	Error_code_G = 0;
+	timestamp = 0;
 //	Timer_init();
 //	Watdog_init();
 }
@@ -39,30 +44,7 @@ void SCH_Init(void) {
  * If head not yet ready to run then we wait to go to next Interrupt.
  */
 void SCH_Update(void) {
-//	int flag = 0; //to check if head have delay == 0
-//	//first we check head of list
-//	do {
-//		if (list.head) {
-//			struct item *tmp = list.head;
-//			flag = 0;
-//			if (tmp->data.Delay == 0) {
-//				//delay of head is 0 then we increase RunMe
-//				tmp->data.RunMe++;
-//				if(tmp->data.Period > 0){
-//					//Period > 0 so setup to run task again.
-//					//We add task again to list
-//					//with Delay is Period and RunMe already increased
-//					add(&list, tmp->data.pTask, tmp->data.Period, tmp->data.Period,
-//											tmp->data.TaskID, tmp->data.RunMe);
-//					//then delete head is contain task have Delay is 0
-//					deleteHead();
-//					flag = 1;
-//				}
-//			} else
-//				//head not yet ready to run
-//				tmp->data.Delay--;
-//		}
-//	} while (flag && list.head && list.head->data.Delay == 0);
+	//we just focus to Delay of head pointer
 	struct item *tmp = list.head;
 	if (tmp && tmp->data.Delay > 0) {
 		tmp->data.Delay--;
@@ -93,30 +75,27 @@ unsigned char SCH_Add_Task(void (*pFunction)(), uint32_t Delay, uint32_t Period)
 
 void SCH_Dispatch_Tasks(void) {
 	struct item *tmp = list.head;
-//	while (tmp) {
-//		if (tmp->data.RunMe > 0) {
-//			(*tmp->data.pTask)();
-//			tmp->data.RunMe--;
-//			if(tmp->data.Period == 0 && tmp->data.RunMe == 0){
-//				SCH_Delete_Task(tmp->data.TaskID);
-//			}
-//		}
-//		tmp = tmp->next;
-//	}
-
 	while (tmp && tmp->data.Delay == 0) {
+		//head Task ready to run
 		(*tmp->data.pTask)();
+		flag_uart = 1;
+		data = timestamp;
+		data_id = tmp->data.TaskID;
+		//Do we run task again ?
 		if (tmp->data.Period == 0) {
+			//NO, then just delete Head Task
 			SCH_Delete_Task(tmp->data.TaskID);
+			//Set tmp pointer to current head pointer after delete
 			tmp = list.head;
 		} else if (tmp->data.Period > 0) {
+			//YES, we put it back to queue with Delay is Period
 			add(&list, tmp->data.pTask, tmp->data.Period, tmp->data.Period,
 					tmp->data.TaskID, tmp->data.RunMe);
 			//then delete head is contain task have Delay is 0
 			deleteHead();
+			//Set tmp pointer to current head pointer after delete
 			tmp = list.head;
-		} else
-			tmp = tmp->next;
+		}
 	}
 //	SCH_Report_Stattus();
 	SCH_Go_To_Sleep();

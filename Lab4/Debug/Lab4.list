@@ -1327,6 +1327,7 @@ void SCH_Dispatch_Tasks(void) {
  8000876:	687b      	ldr	r3, [r7, #4]
  8000878:	681b      	ldr	r3, [r3, #0]
  800087a:	4798      	blx	r3
+		//for uart purpose
 		flag_uart = 1;
  800087c:	4b20      	ldr	r3, [pc, #128]	; (8000900 <SCH_Dispatch_Tasks+0x98>)
  800087e:	2201      	movs	r2, #1
